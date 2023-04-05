@@ -1,0 +1,29 @@
+import pandas as pd
+from fuzzywuzzy import fuzz
+
+# Load data from CSV file
+df = pd.read_csv('company_names.csv')
+
+# Clean company names using fuzzy string matching
+def clean_company_name(name):
+    name = name.lower().replace('inc.', '').replace('corp.', '').replace('co.', '').replace('ltd.', '').replace('llc', '').replace('the', '').replace(',', '').replace('.', '').replace(' ', '')
+    return name
+
+df['Cleaned Company Name'] = df['Company Name'].apply(clean_company_name)
+
+for i in range(len(df)):
+    name1 = df.iloc[i]['Cleaned Company Name']
+    best_match_score = 0
+    best_match_name = ''
+    for j in range(len(df)):
+        if i == j:
+            continue
+        name2 = df.iloc[j]['Cleaned Company Name']
+        score = fuzz.ratio(name1, name2)
+        if score > best_match_score:
+            best_match_score = score
+            best_match_name = df.iloc[j]['Company Name']
+    df.at[i, 'Most Accurate Company Name'] = best_match_name
+
+# Save cleaned data to new CSV file
+df.to_csv('cleaned_company_names.csv', index=False)
